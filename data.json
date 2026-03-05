@@ -1,0 +1,16 @@
+{
+  "gameLocked": false,
+  "players": {
+    "Dante": {
+      "score": 619,
+      "playsByDate": {
+        "2026-03-05": {
+          "reaction": 3,
+          "click": 0,
+          "memory": 0
+        }
+      }
+    }
+  },
+  "playTokens": {}
+}

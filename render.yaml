@@ -1,0 +1,15 @@
+﻿services:
+  - type: web
+    name: concert-ticket-challenge
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: DAILY_TIMEZONE
+        value: Africa/Johannesburg
+      - key: ADMIN_KEY
+        generateValue: true

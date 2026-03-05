@@ -1,0 +1,13 @@
+﻿{
+  "name": "concert-ticket-challenge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Player and admin websites for a concert ticket challenge",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

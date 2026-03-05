@@ -1,0 +1,350 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concert Ticket Challenge - Player</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Poppins,sans-serif;background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);color:white;text-align:center}
+header{padding:25px;font-size:32px;font-weight:700}
+.container{max-width:1000px;margin:auto;padding:20px}
+.card{background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);padding:20px;border-radius:16px;margin:20px 0;box-shadow:0 10px 25px rgba(0,0,0,.3)}
+button{padding:12px 20px;border:none;border-radius:10px;margin:8px;font-size:15px;background:#ffd54f;cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
+button:hover:not(:disabled){transform:scale(1.05)}
+input{padding:10px;border-radius:8px;border:none;width:220px}
+.hidden{display:none}
+.grid{display:grid;grid-template-columns:repeat(4,70px);gap:10px;justify-content:center}
+.tile{width:70px;height:70px;background:#ffd54f;border-radius:8px;font-size:22px;color:black;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none}
+.square{width:120px;height:120px;background:#ffd54f;border-radius:12px;margin:20px auto;cursor:pointer}
+.leader{padding:6px;font-size:18px}
+.status{font-size:14px;opacity:.9}
+.small{font-size:13px;opacity:.85}
+.limitWrap{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.pill{background:rgba(255,255,255,0.16);padding:8px 12px;border-radius:999px;font-size:13px}
+</style>
+</head>
+<body>
+<header>Concert Ticket Challenge</header>
+<div class="container">
+  <div id="login" class="card">
+    <h2>Enter Competition</h2>
+    <p>Play games. Earn points. Highest score wins.</p>
+    <input id="name" maxlength="40" placeholder="Your name">
+    <br><br>
+    <button id="enterBtn">Enter</button>
+    <p class="small">Daily limit: 3 plays per game.</p>
+  </div>
+
+  <div id="menu" class="hidden">
+    <div class="card">
+      <h2 id="welcome"></h2>
+      <p>Total Score: <span id="score">0</span></p>
+      <p id="lockStatus" class="status"></p>
+      <div class="limitWrap">
+        <div class="pill">Reaction: <span id="reactionCount">0</span>/3</div>
+        <div class="pill">Speed Click: <span id="clickCount">0</span>/3</div>
+        <div class="pill">Memory: <span id="memoryCount">0</span>/3</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Play Games</h3>
+      <button id="reactionBtn">Reaction Test</button>
+      <button id="clickBtn">Speed Click</button>
+      <button id="memoryBtn">Memory Game</button>
+    </div>
+
+    <div class="card">
+      <button id="leaderboardBtn">Leaderboard</button>
+    </div>
+  </div>
+
+  <div id="gameArea" class="card hidden"></div>
+
+  <div id="leaderboard" class="card hidden">
+    <h2>Leaderboard</h2>
+    <ul id="leaders"></ul>
+    <button id="backBtn">Back</button>
+  </div>
+</div>
+
+<script>
+let player = '';
+let totalScore = 0;
+let gameLocked = false;
+let dailyPlays = { reaction: 0, click: 0, memory: 0 };
+let currentToken = null;
+let currentGame = null;
+
+const $ = (id) => document.getElementById(id);
+
+function setStatus(message) {
+  $('lockStatus').innerText = message || '';
+}
+
+function updateCounters() {
+  $('reactionCount').innerText = dailyPlays.reaction || 0;
+  $('clickCount').innerText = dailyPlays.click || 0;
+  $('memoryCount').innerText = dailyPlays.memory || 0;
+
+  $('reactionBtn').disabled = gameLocked || (dailyPlays.reaction || 0) >= 3;
+  $('clickBtn').disabled = gameLocked || (dailyPlays.click || 0) >= 3;
+  $('memoryBtn').disabled = gameLocked || (dailyPlays.memory || 0) >= 3;
+
+  if (gameLocked) {
+    setStatus('Competition is locked by admin.');
+  } else {
+    setStatus('');
+  }
+}
+
+async function api(path, options = {}) {
+  const res = await fetch(path, {
+    method: options.method || 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    body: options.body ? JSON.stringify(options.body) : undefined
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error || 'Request failed');
+  }
+  return data;
+}
+
+async function login() {
+  const name = $('name').value.trim();
+  if (!name) return alert('Enter name');
+
+  const data = await api('/api/login', { method: 'POST', body: { name } });
+
+  player = data.name;
+  totalScore = data.score;
+  gameLocked = data.gameLocked;
+  dailyPlays = data.dailyPlays;
+
+  $('login').style.display = 'none';
+  $('menu').classList.remove('hidden');
+  $('welcome').innerText = 'Welcome ' + player;
+  $('score').innerText = totalScore;
+  updateCounters();
+}
+
+function openGame(html) {
+  const area = $('gameArea');
+  area.innerHTML = html;
+  area.classList.remove('hidden');
+}
+
+async function startGame(game) {
+  const data = await api('/api/game/start', {
+    method: 'POST',
+    body: { name: player, game }
+  });
+
+  currentToken = data.token;
+  currentGame = game;
+  dailyPlays = data.dailyPlays;
+  updateCounters();
+}
+
+async function submitScore(points) {
+  if (!currentToken || !currentGame) {
+    throw new Error('Game session missing.');
+  }
+
+  const data = await api('/api/game/submit', {
+    method: 'POST',
+    body: {
+      name: player,
+      game: currentGame,
+      token: currentToken,
+      points
+    }
+  });
+
+  currentToken = null;
+  currentGame = null;
+
+  totalScore = data.totalScore;
+  $('score').innerText = totalScore;
+  alert('You earned ' + data.addedPoints + ' points!');
+}
+
+function closeGameArea() {
+  $('gameArea').classList.add('hidden');
+  $('gameArea').innerHTML = '';
+}
+
+async function reactionGame() {
+  try {
+    await startGame('reaction');
+  } catch (err) {
+    alert(err.message);
+    return;
+  }
+
+  openGame("<h3>Wait for green then click!</h3><div id='box' class='square'></div><p id='state'>Wait...</p>");
+
+  const box = $('box');
+  const state = $('state');
+  box.style.background = 'red';
+
+  let start = null;
+  let ended = false;
+
+  box.onclick = async () => {
+    if (ended) return;
+
+    if (!start) {
+      ended = true;
+      state.innerText = 'Too early. 0 points.';
+      try { await submitScore(0); } catch (err) { alert(err.message); }
+      return;
+    }
+
+    ended = true;
+    const time = Date.now() - start;
+    const points = Math.max(0, 500 - time);
+    state.innerText = 'Reaction time: ' + time + 'ms';
+    try { await submitScore(points); } catch (err) { alert(err.message); }
+  };
+
+  const delay = Math.floor(Math.random() * 3000) + 1000;
+  setTimeout(() => {
+    if (ended) return;
+    box.style.background = 'green';
+    state.innerText = 'Click now!';
+    start = Date.now();
+  }, delay);
+}
+
+async function clickGame() {
+  try {
+    await startGame('click');
+  } catch (err) {
+    alert(err.message);
+    return;
+  }
+
+  let clicks = 0;
+
+  openGame("<h3>Click fast for 5 seconds</h3><div id='btn' class='square'></div><p id='count'>0</p>");
+
+  const btn = $('btn');
+  const count = $('count');
+  let ended = false;
+
+  btn.onclick = () => {
+    if (ended) return;
+    clicks += 1;
+    count.innerText = clicks;
+  };
+
+  setTimeout(async () => {
+    ended = true;
+    btn.onclick = null;
+    const points = clicks * 5;
+    try { await submitScore(points); } catch (err) { alert(err.message); }
+  }, 5000);
+}
+
+async function memoryGame() {
+  try {
+    await startGame('memory');
+  } catch (err) {
+    alert(err.message);
+    return;
+  }
+
+  const nums = [1, 1, 2, 2, 3, 3, 4, 4];
+  nums.sort(() => Math.random() - 0.5);
+
+  openGame("<h3>Match the pairs</h3><div class='grid' id='grid'></div><p id='mstate'></p>");
+
+  const grid = $('grid');
+  const mstate = $('mstate');
+  let first = null;
+  let lock = false;
+  let matches = 0;
+  let ended = false;
+
+  nums.forEach((n) => {
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    tile.dataset.val = String(n);
+
+    tile.onclick = async () => {
+      if (ended || lock || tile.innerText || tile === first) return;
+
+      tile.innerText = n;
+
+      if (!first) {
+        first = tile;
+        return;
+      }
+
+      lock = true;
+      if (first.dataset.val === tile.dataset.val) {
+        matches += 1;
+        first = null;
+        lock = false;
+
+        if (matches === 4) {
+          ended = true;
+          mstate.innerText = 'Completed!';
+          try { await submitScore(200); } catch (err) { alert(err.message); }
+        }
+      } else {
+        const previous = first;
+        setTimeout(() => {
+          previous.innerText = '';
+          tile.innerText = '';
+          first = null;
+          lock = false;
+        }, 700);
+      }
+    };
+
+    grid.appendChild(tile);
+  });
+}
+
+async function showLeaderboard() {
+  $('menu').classList.add('hidden');
+
+  const data = await api('/api/leaderboard');
+  const list = $('leaders');
+  list.innerHTML = '';
+
+  data.leaderboard.forEach((entry) => {
+    const li = document.createElement('li');
+    li.className = 'leader';
+    li.innerText = entry.name + ' - ' + entry.score + ' pts';
+    list.appendChild(li);
+  });
+
+  $('leaderboard').classList.remove('hidden');
+}
+
+function backMenu() {
+  $('leaderboard').classList.add('hidden');
+  $('menu').classList.remove('hidden');
+}
+
+$('enterBtn').addEventListener('click', () => {
+  login().catch((err) => alert(err.message));
+});
+$('reactionBtn').addEventListener('click', reactionGame);
+$('clickBtn').addEventListener('click', clickGame);
+$('memoryBtn').addEventListener('click', memoryGame);
+$('leaderboardBtn').addEventListener('click', () => {
+  showLeaderboard().catch((err) => alert(err.message));
+});
+$('backBtn').addEventListener('click', backMenu);
+</script>
+</body>
+</html>
