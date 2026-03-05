@@ -3,57 +3,62 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Concert Ticket Challenge - Admin</title>
+<title>Game Night - Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Poppins,sans-serif;background:linear-gradient(135deg,#1b1b1b,#252525,#333);color:white;text-align:center}
-header{padding:25px;font-size:32px;font-weight:700}
+body{margin:0;font-family:Poppins,sans-serif;background:linear-gradient(135deg,#1a1a1a,#242424,#2f2f2f);color:white;text-align:center}
+header{padding:24px;font-size:30px;font-weight:700}
 .container{max-width:1100px;margin:auto;padding:20px}
-.card{background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);padding:20px;border-radius:16px;margin:20px 0;box-shadow:0 10px 25px rgba(0,0,0,.3)}
-button{padding:12px 20px;border:none;border-radius:10px;margin:8px;font-size:15px;background:#ffd54f;cursor:pointer}
-button:hover{transform:scale(1.05)}
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.15);font-size:14px}
+.card{background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);padding:18px;border-radius:14px;margin:16px 0;box-shadow:0 10px 25px rgba(0,0,0,.3)}
+button{padding:10px 16px;border:none;border-radius:10px;margin:6px;font-size:14px;background:#ffd54f;cursor:pointer}
+button:hover{transform:scale(1.03)}
+button.danger{background:#ffb3b3}
 .small{font-size:13px;opacity:.85}
 .status{font-size:16px}
+.table-wrap{overflow-x:auto;margin-top:10px}
+table{width:100%;border-collapse:collapse;min-width:700px}
+th,td{padding:9px;border-bottom:1px solid rgba(255,255,255,0.15);font-size:13px;text-align:left;vertical-align:top}
+th{text-transform:uppercase;font-size:12px;letter-spacing:.4px;color:#ddd}
+code{background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:6px}
 </style>
 </head>
 <body>
-<header>Concert Ticket Challenge - Admin</header>
+<header>Game Night Admin</header>
 <div class="container">
   <div class="card">
-    <h2>Competition Controls</h2>
+    <h2>Phase Ten History</h2>
     <p class="status">Status: <span id="status">Loading...</span></p>
     <button id="refreshBtn">Refresh</button>
-    <button id="lockBtn">End/Lock Game</button>
-    <button id="unlockBtn">Reopen Game</button>
-    <button id="downloadBtn">Download Stats</button>
-    <button id="resetBtn">Reset All Data</button>
-    <p class="small">Daily limit is enforced server-side: 3 plays per game per configured server day.</p>
+    <button id="downloadBtn">Download JSON</button>
+    <button id="clearBtn" class="danger">Clear All History</button>
+    <p class="small">This manages shared history seen by all phones at <code>/</code> -> <code>History</code>.</p>
   </div>
 
   <div class="card">
-    <h2>Leaderboard + Usage</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Player</th>
-          <th>Score</th>
-          <th>Reaction Today</th>
-          <th>Click Today</th>
-          <th>Memory Today</th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
+    <h3>Saved Games</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Played At</th>
+            <th>Winner(s)</th>
+            <th>Players</th>
+            <th>Rounds</th>
+            <th>Rule</th>
+            <th>Detail</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
 <script>
 const $ = (id) => document.getElementById(id);
-let cachedStats = null;
 let adminKey = '';
+let cachedHistory = [];
 
 async function api(path, options = {}) {
   const res = await fetch(path, {
@@ -64,36 +69,17 @@ async function api(path, options = {}) {
     },
     body: options.body ? JSON.stringify(options.body) : undefined
   });
+
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(data.error || 'Request failed');
   }
+
   return data;
 }
 
-async function loadStats() {
-  const stats = await api('/api/admin/stats');
-  cachedStats = stats;
-
-  $('status').innerText = stats.gameLocked ? 'LOCKED' : 'OPEN';
-
-  const tbody = $('rows');
-  tbody.innerHTML = '';
-
-  stats.players.forEach((p) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML =
-      '<td>' + escapeHtml(p.name) + '</td>' +
-      '<td>' + p.score + '</td>' +
-      '<td>' + (p.todayPlays.reaction || 0) + '/3</td>' +
-      '<td>' + (p.todayPlays.click || 0) + '/3</td>' +
-      '<td>' + (p.todayPlays.memory || 0) + '/3</td>';
-    tbody.appendChild(tr);
-  });
-}
-
-function escapeHtml(text) {
-  return text
+function esc(text) {
+  return String(text)
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
@@ -101,41 +87,77 @@ function escapeHtml(text) {
     .replaceAll("'", '&#039;');
 }
 
-async function setLock(locked) {
-  await api('/api/admin/lock', { method: 'POST', body: { locked } });
-  await loadStats();
+function fmtDate(value) {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value || '-';
+  return d.toLocaleString();
 }
 
-function downloadStats() {
-  if (!cachedStats) return;
-  const blob = new Blob([JSON.stringify(cachedStats, null, 2)], { type: 'application/json' });
+async function loadHistory() {
+  const data = await api('/api/admin/phase/history');
+  cachedHistory = Array.isArray(data.history) ? data.history : [];
+
+  $('status').innerText = `Loaded ${cachedHistory.length} game(s)`;
+
+  const tbody = $('rows');
+  tbody.innerHTML = '';
+
+  if (!cachedHistory.length) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td colspan="6">No history yet.</td>';
+    tbody.appendChild(tr);
+    return;
+  }
+
+  cachedHistory.forEach((item) => {
+    const winners = (item.winners || []).join(', ') || '-';
+    const players = (item.players || []).join(', ') || '-';
+
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>' + esc(fmtDate(item.playedAt)) + '</td>' +
+      '<td>' + esc(winners) + '</td>' +
+      '<td>' + esc(players) + '</td>' +
+      '<td>' + esc(item.rounds ?? '-') + '</td>' +
+      '<td>' + esc(item.rule || '-') + '</td>' +
+      '<td>' + esc(item.detail || '-') + '</td>';
+
+    tbody.appendChild(tr);
+  });
+}
+
+function downloadHistory() {
+  const blob = new Blob([JSON.stringify(cachedHistory, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'concert_stats.json';
+  a.download = 'phase_ten_history.json';
   a.click();
 }
 
-async function resetAll() {
-  const ok = confirm('Reset all players and scores? This cannot be undone.');
+async function clearHistory() {
+  const ok = confirm('Clear all shared Phase Ten history? This affects all devices.');
   if (!ok) return;
-  await api('/api/admin/reset', { method: 'POST' });
-  await loadStats();
+
+  await api('/api/admin/phase/history', { method: 'DELETE' });
+  await loadHistory();
 }
 
-$('refreshBtn').addEventListener('click', () => loadStats().catch((err) => alert(err.message)));
-$('lockBtn').addEventListener('click', () => setLock(true).catch((err) => alert(err.message)));
-$('unlockBtn').addEventListener('click', () => setLock(false).catch((err) => alert(err.message)));
-$('downloadBtn').addEventListener('click', downloadStats);
-$('resetBtn').addEventListener('click', () => resetAll().catch((err) => alert(err.message)));
+$('refreshBtn').addEventListener('click', () => loadHistory().catch((err) => {
+  $('status').innerText = 'Error';
+  alert(err.message);
+}));
+$('downloadBtn').addEventListener('click', downloadHistory);
+$('clearBtn').addEventListener('click', () => clearHistory().catch((err) => {
+  $('status').innerText = 'Error';
+  alert(err.message);
+}));
 
-adminKey = prompt('Admin key (leave blank if not configured on server):') || '';
+adminKey = prompt('Admin key:') || '';
 
-loadStats().catch((err) => {
+loadHistory().catch((err) => {
   $('status').innerText = 'Error';
   alert(err.message);
 });
 </script>
 </body>
 </html>
-
-

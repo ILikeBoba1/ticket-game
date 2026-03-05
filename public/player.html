@@ -1,105 +1,388 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Game Night</title>
   <style>
+    :root {
+      --bg: #121212;
+      --panel: #1a1a1a;
+      --panel-2: #212121;
+      --line: #3a3a3a;
+      --accent: #00ffcc;
+      --text: #ffffff;
+      --muted: #b3b3b3;
+      --danger: #ff6b6b;
+      --good: #90ee90;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
-      background-color: #121212;
-      color: #ffffff;
+      background-color: var(--bg);
+      color: var(--text);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 12px;
       text-align: center;
     }
 
     h1 {
-      color: #00ffcc;
+      color: var(--accent);
+      margin: 6px 0 8px;
+      font-size: 30px;
     }
 
-    nav {
-      margin-bottom: 20px;
+    h2 { margin-top: 6px; }
+
+    .sub {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
     }
 
-    nav button {
-      padding: 10px 20px;
-      margin: 0 10px;
-      background-color: #00ffcc;
-      border: none;
-      border-radius: 5px;
-      font-weight: bold;
-      color: #000;
-      cursor: pointer;
+    .app-shell {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding-top: 28px;
     }
 
     section {
       display: none;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      margin: 0 auto;
     }
 
     section.active {
       display: block;
     }
 
-    input[type="text"], input[type="number"] {
-      width: 100%;
-      max-width: 400px;
-      padding: 10px;
-      margin-bottom: 10px;
-      border: none;
-      border-radius: 5px;
-      background-color: #333;
-      color: #fff;
+    .card {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
     }
 
-    button[type="submit"], #startGameButton {
-      padding: 10px 20px;
-      background-color: #00ffcc;
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      max-width: 420px;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background-color: #2e2e2e;
+      color: var(--text);
+    }
+
+    button[type="submit"], #startGameButton, #resetButton, .action-btn {
+      padding: 10px 16px;
+      background-color: var(--accent);
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
       color: #000;
-      font-weight: bold;
+      font-weight: 700;
       cursor: pointer;
-      margin-top: 10px;
+      margin-top: 8px;
+    }
+
+    #resetButton {
+      margin-left: 8px;
+      background-color: #ffd166;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     .table-wrapper {
       overflow-x: auto;
-      margin-top: 20px;
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #171717;
+      -webkit-overflow-scrolling: touch;
     }
 
     table {
       border-collapse: collapse;
-      margin: 0 auto;
       width: 100%;
-      max-width: 1000px;
-      min-width: 600px;
     }
 
     th, td {
-      padding: 10px;
+      padding: 10px 8px;
       text-align: center;
-      border: 1px solid #444;
+      border: 1px solid var(--line);
+      white-space: nowrap;
+    }
+
+    #scoreTable {
+      width: max-content;
+      min-width: 100%;
+      table-layout: fixed;
+    }
+
+    #scoreTable th,
+    #scoreTable td {
+      min-width: 86px;
+    }
+
+    #scoreTable thead th {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: #272727;
+    }
+
+    #scoreTable th:first-child,
+    #scoreTable td:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      min-width: 76px;
+      background: #222;
+      font-weight: 700;
+    }
+
+    #scoreTable thead th:first-child {
+      z-index: 4;
+      background: #303030;
     }
 
     .score-input {
-      width: 60px;
-      padding: 5px;
-      border-radius: 4px;
-      border: none;
+      width: 100%;
+      min-width: 70px;
+      padding: 7px 6px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
       text-align: center;
-      background-color: #333;
-      color: #fff;
+      background-color: #313131;
+      color: var(--text);
     }
 
     .highest {
-      color: red;
-      font-weight: bold;
+      color: var(--danger);
+      font-weight: 800;
     }
 
     .lowest {
-      color: lightgreen;
-      font-weight: bold;
+      color: var(--good);
+      font-weight: 800;
+    }
+
+    .winner-box {
+      display: none;
+      margin: 10px 0 2px;
+      background: #0e2d28;
+      border: 1px solid #16584f;
+      color: #b9fff2;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 14px;
+      text-align: left;
+    }
+
+    .winner-title {
+      margin: 0 0 4px;
+      font-weight: 800;
+      font-size: 16px;
+    }
+
+    .winner-details {
+      margin: 0;
+      color: #d4fff7;
+      font-size: 13px;
+    }
+
+    .table-note {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .menu-btn {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      width: 42px;
+      height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #1f1f1f;
+      color: var(--text);
+      font-size: 24px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 60;
+      cursor: pointer;
+    }
+
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 70;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: min(290px, 84vw);
+      height: 100%;
+      background: #111;
+      border-right: 1px solid var(--line);
+      transform: translateX(-100%);
+      transition: transform 0.2s ease;
+      z-index: 80;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body.drawer-open .drawer-backdrop {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    body.drawer-open .drawer {
+      transform: translateX(0);
+    }
+
+    body.drawer-open {
+      overflow: hidden;
+    }
+
+    .drawer-head {
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--accent);
+      font-weight: 800;
+      letter-spacing: 0.3px;
+    }
+
+    .drawer-close {
+      background: transparent;
+      color: var(--text);
+      border: none;
+      font-size: 26px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .drawer-links {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .drawer-link {
+      text-align: left;
+      background: #1c1c1c;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 15px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .drawer-hint {
+      color: var(--muted);
+      font-size: 12px;
+      margin: 4px 12px 0;
+      text-align: left;
+    }
+
+    .history-controls {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    #refreshHistoryBtn {
+      background: #ffb3b3;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .history-item {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      text-align: left;
+      overflow: hidden;
+    }
+
+    .history-item summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 12px;
+      font-weight: 700;
+      background: #262626;
+    }
+
+    .history-item summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .history-item summary::after {
+      content: ' +';
+      float: right;
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .history-item[open] summary::after {
+      content: ' -';
+    }
+
+    .history-body {
+      padding: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .history-meta {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .history-table th,
+    .history-table td {
+      border: 1px solid var(--line);
+      padding: 8px;
+      font-size: 13px;
+      text-align: center;
+      white-space: nowrap;
     }
 
     img {
@@ -107,17 +390,10 @@
       height: auto;
       border-radius: 10px;
       margin-top: 10px;
+      border: 1px solid var(--line);
     }
 
-    @media (max-width: 600px) {
-      table, th, td {
-        font-size: 14px;
-      }
-    }
-
-    .cluedo-cell {
-      text-align: left;
-    }
+    .cluedo-cell { text-align: left; }
 
     .cluedo-label {
       display: inline-flex;
@@ -128,122 +404,261 @@
     .cluedo-label input[type="checkbox"] {
       transform: scale(1.2);
     }
+
+    .empty-history {
+      margin: 0;
+      padding: 14px;
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      color: var(--muted);
+      text-align: left;
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 10px; }
+      .app-shell { padding-top: 26px; }
+      section { padding: 10px; }
+      h1 { font-size: 26px; }
+      #scoreTable th, #scoreTable td { min-width: 78px; padding: 8px 6px; font-size: 13px; }
+      .score-input { min-width: 62px; }
+    }
   </style>
 </head>
 <body>
-  <h1>🎉 Game Night 🎉</h1>
+  <button type="button" class="menu-btn" id="menuBtn" aria-label="Open menu" onclick="openDrawer()">&#9776;</button>
 
-  <nav>
-    <button onclick="showSection('phaseTen')">Phase Ten</button>
-    <button onclick="showSection('cluedo')">Cluedo</button>
-  </nav>
+  <div id="drawerBackdrop" class="drawer-backdrop" onclick="closeDrawer()"></div>
 
-  <section id="phaseTen" class="active">
-    <h2>Phase Ten Tracker</h2>
-    <div id="setup">
-      <input type="text" id="playerInput" placeholder="Enter player names (2-12), separated by space">
-      <br>
-      <button id="startGameButton" onclick="startGame()">Start Game</button>
+  <aside id="drawer" class="drawer" aria-hidden="true">
+    <div class="drawer-head">
+      Menu
+      <button type="button" class="drawer-close" aria-label="Close menu" onclick="closeDrawer()">&times;</button>
     </div>
-    <div id="scoreboard" style="display:none">
-      <form id="scoreForm">
-        <div class="table-wrapper">
-          <table id="scoreTable"></table>
+
+    <div class="drawer-links">
+      <button type="button" class="drawer-link" onclick="navigateTo('phaseTen')">Phase Ten</button>
+      <button type="button" class="drawer-link" onclick="navigateTo('cluedo')">Cluedo</button>
+      <button type="button" class="drawer-link" onclick="navigateTo('history')">History</button>
+    </div>
+
+    <p class="drawer-hint">History stores completed Phase Ten games on this device.</p>
+  </aside>
+
+  <div class="app-shell">
+    <h1>Game Night</h1>
+    <p class="sub">Phase Ten tracker + Cluedo checklist</p>
+
+    <section id="phaseTen" class="active">
+      <h2>Phase Ten Tracker</h2>
+
+      <div id="setup" class="card">
+        <p class="sub">Enter 2-12 player names. Use spaces or commas.</p>
+        <input type="text" id="playerInput" placeholder="Example: Dante Amy Joe or Dante, Amy, Joe">
+        <br>
+        <button id="startGameButton" type="button" onclick="startGame()">Start Game</button>
+      </div>
+
+      <div id="scoreboard" style="display:none">
+        <div id="winnerBox" class="winner-box">
+          <p id="winnerTitle" class="winner-title"></p>
+          <p id="winnerDetails" class="winner-details"></p>
         </div>
-        <button type="submit">Done</button>
-      </form>
-    </div>
-  </section>
 
-  <section id="cluedo">
-    <h2>Cluedo Checklist</h2>
-    <img src="https://play-lh.googleusercontent.com/JMQugJWauP-w6E6afJf97RchfpGV8aGN8peqciyz2OLxnGOkszfeN8kyxu6qxKwYELg" alt="Cluedo">
-    <h3>The Checklist</h3>
-    <table>
-      <tr>
-        <th>People</th>
-        <th>Where</th>
-        <th>Weapons</th>
-      </tr>
-      <tr>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Peacock</label></td>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Patio</label></td>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Pistol</label></td>
-      </tr>
-      <tr>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Mustard</label></td>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Hall</label></td>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Knife</label></td>
-      </tr>
-      <tr>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Scarlet</label></td>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Kitchen</label></td>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Candlestick</label></td>
-      </tr>
-      <tr>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Green</label></td>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Living Room</label></td>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Rope</label></td>
-      </tr>
-      <tr>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">White</label></td>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Dining Room</label></td>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Dumbbell</label></td>
-      </tr>
-      <tr>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Plum</label></td>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Spa</label></td>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Trophy</label></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Observatory</label></td>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Axe</label></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Theatre</label></td>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Poison</label></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Guest House</label></td>
-        <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Bat</label></td>
-      </tr>
-    </table>
-  </section>
+        <form id="scoreForm">
+          <div class="table-wrapper">
+            <table id="scoreTable"></table>
+          </div>
+          <p class="table-note">Tip: swipe left/right on the table if needed.</p>
+          <button id="doneButton" type="submit">Done</button>
+          <button id="resetButton" type="button" onclick="resetGame()">Reset</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="cluedo">
+      <h2>Cluedo Checklist</h2>
+      <img src="https://play-lh.googleusercontent.com/JMQugJWauP-w6E6afJf97RchfpGV8aGN8peqciyz2OLxnGOkszfeN8kyxu6qxKwYELg" alt="Cluedo">
+      <h3>The Checklist</h3>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>People</th>
+              <th>Where</th>
+              <th>Weapons</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Peacock</label></td>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Patio</label></td>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Pistol</label></td>
+            </tr>
+            <tr>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Mustard</label></td>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Hall</label></td>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Knife</label></td>
+            </tr>
+            <tr>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Scarlet</label></td>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Kitchen</label></td>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Candlestick</label></td>
+            </tr>
+            <tr>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Green</label></td>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Living Room</label></td>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Rope</label></td>
+            </tr>
+            <tr>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">White</label></td>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Dining Room</label></td>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Dumbbell</label></td>
+            </tr>
+            <tr>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Plum</label></td>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Spa</label></td>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Trophy</label></td>
+            </tr>
+            <tr>
+              <td></td>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Observatory</label></td>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Axe</label></td>
+            </tr>
+            <tr>
+              <td></td>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Theatre</label></td>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Poison</label></td>
+            </tr>
+            <tr>
+              <td></td>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Guest House</label></td>
+              <td class="cluedo-cell"><label class="cluedo-label"><input type="checkbox">Bat</label></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="history">
+      <h2>Phase Ten History</h2>
+      <p class="sub">Completed games are saved automatically when a winner is decided.</p>
+
+      <div class="history-controls">
+        <button type="button" id="refreshHistoryBtn" class="action-btn" onclick="refreshHistory()">Refresh History</button>
+      </div>
+
+      <div id="historyList" class="history-list"></div>
+    </section>
+  </div>
 
   <audio id="startSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3" preload="auto"></audio>
   <audio id="submitSound" src="https://www.soundjay.com/buttons/sounds/button-09.mp3" preload="auto"></audio>
 
   <script>
-    function showSection(sectionId) {
-      document.querySelectorAll('section').forEach(section => {
-        section.classList.remove('active');
-      });
-      document.getElementById(sectionId).classList.add('active');
-    }
+    const FINISH_PHASE = 10;
 
     let players = [];
     let phaseCounters = {};
     let scoreTotals = {};
     let scoreHistory = {};
+    let finishedPlayers = [];
+    let gameOver = false;
+    let gameSaved = false;
+    let historyLoadError = '';
+
+    async function api(path, options = {}) {
+      const res = await fetch(path, {
+        method: options.method || 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: options.body ? JSON.stringify(options.body) : undefined
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || 'Request failed.');
+      }
+      return data;
+    }
+
+    function openDrawer() {
+      document.body.classList.add('drawer-open');
+      document.getElementById('drawer').setAttribute('aria-hidden', 'false');
+    }
+
+    function closeDrawer() {
+      document.body.classList.remove('drawer-open');
+      document.getElementById('drawer').setAttribute('aria-hidden', 'true');
+    }
+
+    function showSection(sectionId) {
+      document.querySelectorAll('section').forEach((section) => {
+        section.classList.remove('active');
+      });
+      document.getElementById(sectionId).classList.add('active');
+
+      if (sectionId === 'history') {
+        refreshHistory();
+      }
+    }
+
+    function navigateTo(sectionId) {
+      showSection(sectionId);
+      closeDrawer();
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeDrawer();
+    });
 
     function playSound(id) {
       const audio = document.getElementById(id);
-      if (audio) audio.play();
+      if (!audio) return;
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
+    }
+
+    function parsePlayers(raw) {
+      const text = raw.trim();
+      if (!text) return [];
+
+      const splitByComma = text.includes(',');
+      const list = splitByComma
+        ? text.split(',').map((p) => p.trim())
+        : text.split(/\s+/).map((p) => p.trim());
+
+      return list.filter(Boolean);
+    }
+
+    function hasDuplicateNames(names) {
+      const lowered = names.map((n) => n.toLowerCase());
+      return new Set(lowered).size !== lowered.length;
     }
 
     function startGame() {
-      const input = document.getElementById('playerInput').value.trim();
-      players = input.split(/\s+/);
+      const names = parsePlayers(document.getElementById('playerInput').value);
 
-      if (players.length < 2 || players.length > 12) {
+      if (names.length < 2 || names.length > 12) {
         alert('Please enter between 2 and 12 players.');
         return;
       }
 
-      players.forEach(player => {
+      if (hasDuplicateNames(names)) {
+        alert('Player names must be unique.');
+        return;
+      }
+
+      players = names;
+      phaseCounters = {};
+      scoreTotals = {};
+      scoreHistory = {};
+      finishedPlayers = [];
+      gameOver = false;
+      gameSaved = false;
+
+      players.forEach((player) => {
         phaseCounters[player] = 1;
         scoreTotals[player] = 0;
         scoreHistory[player] = [];
@@ -251,75 +666,106 @@
 
       document.getElementById('setup').style.display = 'none';
       document.getElementById('scoreboard').style.display = 'block';
+      hideWinner();
+      showSection('phaseTen');
       renderTable();
       playSound('startSound');
+    }
+
+    function resetGame() {
+      if (!confirm('Reset this game? All rounds will be cleared.')) return;
+
+      players = [];
+      phaseCounters = {};
+      scoreTotals = {};
+      scoreHistory = {};
+      finishedPlayers = [];
+      gameOver = false;
+      gameSaved = false;
+
+      document.getElementById('playerInput').value = '';
+      document.getElementById('setup').style.display = 'block';
+      document.getElementById('scoreboard').style.display = 'none';
+      hideWinner();
     }
 
     function renderTable() {
       const table = document.getElementById('scoreTable');
       table.innerHTML = '';
 
+      const thead = document.createElement('thead');
       const headerRow = document.createElement('tr');
       const roundHeader = document.createElement('th');
       roundHeader.textContent = 'Round';
       headerRow.appendChild(roundHeader);
-      players.forEach(player => {
+
+      players.forEach((player) => {
         const th = document.createElement('th');
         th.textContent = player;
         headerRow.appendChild(th);
       });
-      table.appendChild(headerRow);
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
 
-      const totalRounds = scoreHistory[players[0]].length || 0;
-      for (let i = 0; i < totalRounds; i++) {
+      const tbody = document.createElement('tbody');
+      const totalRounds = scoreHistory[players[0]]?.length || 0;
+
+      for (let i = 0; i < totalRounds; i += 1) {
         const tr = document.createElement('tr');
         const label = document.createElement('td');
-        label.textContent = `Round ${i + 1}`;
+        label.textContent = `R${i + 1}`;
         tr.appendChild(label);
-        players.forEach(player => {
+
+        players.forEach((player) => {
           const td = document.createElement('td');
           td.textContent = scoreHistory[player][i] ?? '';
           tr.appendChild(td);
         });
-        table.appendChild(tr);
+
+        tbody.appendChild(tr);
       }
 
       const phaseRow = document.createElement('tr');
       const phaseLabel = document.createElement('td');
       phaseLabel.textContent = 'Phase';
       phaseRow.appendChild(phaseLabel);
-      players.forEach(player => {
+
+      players.forEach((player) => {
         const td = document.createElement('td');
-        td.textContent = "Phase " + phaseCounters[player];
-        td.className = 'phase';
+        const phase = Math.min(phaseCounters[player], FINISH_PHASE);
+        td.textContent = `P${phase}`;
         phaseRow.appendChild(td);
       });
-      table.appendChild(phaseRow);
+      tbody.appendChild(phaseRow);
 
       const scoreRow = document.createElement('tr');
       const totalLabel = document.createElement('td');
       totalLabel.textContent = 'Total';
       scoreRow.appendChild(totalLabel);
-      players.forEach(player => {
+
+      players.forEach((player) => {
         const td = document.createElement('td');
         td.textContent = scoreTotals[player];
         td.className = 'total';
         scoreRow.appendChild(td);
       });
-      table.appendChild(scoreRow);
+      tbody.appendChild(scoreRow);
 
       const inputRow = document.createElement('tr');
       const inputLabel = document.createElement('td');
-      inputLabel.textContent = 'Enter';
+      inputLabel.textContent = gameOver ? 'Locked' : 'Enter';
       inputRow.appendChild(inputLabel);
-      players.forEach(player => {
+
+      players.forEach((player) => {
         const td = document.createElement('td');
         const input = document.createElement('input');
         input.type = 'number';
         input.min = '0';
         input.className = 'score-input';
         input.name = `score-${player}`;
-        input.addEventListener('keydown', function(event) {
+        input.placeholder = '0';
+        input.disabled = gameOver;
+        input.addEventListener('keydown', (event) => {
           if (event.key === 'Enter') {
             event.preventDefault();
           }
@@ -327,42 +773,270 @@
         td.appendChild(input);
         inputRow.appendChild(td);
       });
-      table.appendChild(inputRow);
+      tbody.appendChild(inputRow);
+
+      table.appendChild(tbody);
+
+      document.getElementById('doneButton').disabled = gameOver;
+      updateColors();
     }
 
-    document.getElementById('scoreForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      players.forEach(player => {
-        const input = document.querySelector(`[name='score-${player}']`);
-        const score = parseInt(input.value);
-        if (!isNaN(score)) {
-          if (score < 50) {
-            phaseCounters[player]++;
-          }
-          scoreTotals[player] += score;
-          scoreHistory[player].push(score);
-        }
-        input.value = '';
+    function updateColors() {
+      if (!players.length) return;
+
+      const scores = players.map((player) => scoreTotals[player]);
+      const maxScore = Math.max(...scores);
+      const minScore = Math.min(...scores);
+
+      const totalCells = document.querySelectorAll('.total');
+      totalCells.forEach((td) => {
+        const value = parseInt(td.textContent, 10);
+        td.classList.remove('highest', 'lowest');
+
+        if (maxScore === minScore) return;
+        if (value === maxScore) td.classList.add('highest');
+        if (value === minScore) td.classList.add('lowest');
       });
-      updateColors();
+    }
+
+    function showWinner(title, details) {
+      const box = document.getElementById('winnerBox');
+      document.getElementById('winnerTitle').textContent = title;
+      document.getElementById('winnerDetails').textContent = details;
+      box.style.display = 'block';
+    }
+
+    function hideWinner() {
+      const box = document.getElementById('winnerBox');
+      box.style.display = 'none';
+      document.getElementById('winnerTitle').textContent = '';
+      document.getElementById('winnerDetails').textContent = '';
+    }
+
+    async function fetchHistoryRecords() {
+      const data = await api('/api/phase/history');
+      return Array.isArray(data.history) ? data.history : [];
+    }
+
+    async function saveCompletedGame(result) {
+      if (gameSaved) return;
+
+      const record = {
+        playedAt: new Date().toISOString(),
+        players: [...players],
+        rounds: scoreHistory[players[0]]?.length || 0,
+        totals: { ...scoreTotals },
+        phases: { ...phaseCounters },
+        winners: [...result.winners],
+        finishedPlayers: [...result.finishedPlayers],
+        rule: result.rule,
+        detail: result.detail
+      };
+
+      await api('/api/phase/history', {
+        method: 'POST',
+        body: record
+      });
+
+      gameSaved = true;
+      await refreshHistory();
+    }
+
+    function formatRecordDate(isoString) {
+      const d = new Date(isoString);
+      if (Number.isNaN(d.getTime())) return isoString;
+      return d.toLocaleString();
+    }
+
+    async function refreshHistory() {
+      historyLoadError = '';
+      try {
+        const records = await fetchHistoryRecords();
+        renderHistory(records);
+      } catch (err) {
+        historyLoadError = err.message || 'Could not load history.';
+        renderHistory([]);
+      }
+    }
+
+    function renderHistory(records) {
+      const list = document.getElementById('historyList');
+      list.innerHTML = '';
+
+      if (historyLoadError) {
+        const p = document.createElement('p');
+        p.className = 'empty-history';
+        p.textContent = 'History unavailable: ' + historyLoadError;
+        list.appendChild(p);
+        return;
+      }
+
+      if (!records.length) {
+        const p = document.createElement('p');
+        p.className = 'empty-history';
+        p.textContent = 'No completed Phase Ten games yet.';
+        list.appendChild(p);
+        return;
+      }
+
+      records.forEach((record, index) => {
+        const details = document.createElement('details');
+        details.className = 'history-item';
+
+        const summary = document.createElement('summary');
+        const winnerLine = (record.winners || []).length === 1
+          ? record.winners[0]
+          : `Tie: ${(record.winners || []).join(', ')}`;
+
+        summary.textContent = `Game ${records.length - index} | ${formatRecordDate(record.playedAt)} | Winner: ${winnerLine}`;
+        details.appendChild(summary);
+
+        const body = document.createElement('div');
+        body.className = 'history-body';
+
+        const meta = document.createElement('p');
+        meta.className = 'history-meta';
+        meta.textContent = `Players: ${(record.players || []).join(', ')} | Rounds: ${record.rounds || 0} | ${record.detail || ''}`;
+        body.appendChild(meta);
+
+        const wrap = document.createElement('div');
+        wrap.className = 'table-wrapper';
+
+        const table = document.createElement('table');
+        table.className = 'history-table';
+
+        const thead = document.createElement('thead');
+        thead.innerHTML = '<tr><th>Player</th><th>Final Phase</th><th>Total Score</th></tr>';
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        const totalsValues = Object.values(record.totals || {}).map((v) => Number(v));
+        const lowest = totalsValues.length ? Math.min(...totalsValues) : null;
+
+        (record.players || []).forEach((player) => {
+          const tr = document.createElement('tr');
+
+          const nameTd = document.createElement('td');
+          nameTd.textContent = player;
+          tr.appendChild(nameTd);
+
+          const phaseTd = document.createElement('td');
+          const phaseValue = Number(record.phases?.[player] || 1);
+          phaseTd.textContent = `P${Math.min(phaseValue, FINISH_PHASE)}`;
+          tr.appendChild(phaseTd);
+
+          const totalTd = document.createElement('td');
+          const totalValue = Number(record.totals?.[player] || 0);
+          totalTd.textContent = String(totalValue);
+          if (lowest !== null && totalValue === lowest) {
+            totalTd.classList.add('lowest');
+          }
+          tr.appendChild(totalTd);
+
+          tbody.appendChild(tr);
+        });
+
+        table.appendChild(tbody);
+        wrap.appendChild(table);
+        body.appendChild(wrap);
+
+        details.appendChild(body);
+        list.appendChild(details);
+      });
+    }
+
+    function checkWinnerAndLockIfNeeded() {
+      if (finishedPlayers.length === 0) return;
+
+      gameOver = true;
+
+      if (finishedPlayers.length === 1) {
+        const p = finishedPlayers[0];
+        const detail = `${p} finished Phase 10 first, so they win immediately.`;
+        showWinner(`${p} wins!`, detail);
+        saveCompletedGame({
+          winners: [p],
+          finishedPlayers: [...finishedPlayers],
+          rule: 'single-finisher',
+          detail
+        }).catch((err) => console.error('Failed to save history:', err));
+        return;
+      }
+
+      const lowestScore = Math.min(...finishedPlayers.map((p) => scoreTotals[p]));
+      const winners = finishedPlayers.filter((p) => scoreTotals[p] === lowestScore);
+
+      if (winners.length === 1) {
+        const detail = `${finishedPlayers.length} players finished Phase 10 this round. Lowest total score wins (${lowestScore}).`;
+        showWinner(`${winners[0]} wins!`, detail);
+        saveCompletedGame({
+          winners,
+          finishedPlayers: [...finishedPlayers],
+          rule: 'multi-finisher-lowest-score',
+          detail
+        }).catch((err) => console.error('Failed to save history:', err));
+      } else {
+        const detail = `${finishedPlayers.length} players finished Phase 10 this round and tied on lowest total score (${lowestScore}).`;
+        showWinner(`Tie: ${winners.join(', ')}`, detail);
+        saveCompletedGame({
+          winners,
+          finishedPlayers: [...finishedPlayers],
+          rule: 'multi-finisher-tie',
+          detail
+        }).catch((err) => console.error('Failed to save history:', err));
+      }
+    }
+
+    document.getElementById('scoreForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (gameOver || players.length === 0) return;
+
+      const roundScores = {};
+
+      for (const player of players) {
+        const input = document.querySelector(`[name='score-${player}']`);
+        const raw = (input.value || '').trim();
+
+        if (!raw) {
+          alert(`Enter a score for ${player}.`);
+          input.focus();
+          return;
+        }
+
+        const score = parseInt(raw, 10);
+        if (Number.isNaN(score) || score < 0) {
+          alert(`Invalid score for ${player}. Use 0 or more.`);
+          input.focus();
+          return;
+        }
+
+        roundScores[player] = score;
+      }
+
+      const newlyFinished = [];
+
+      players.forEach((player) => {
+        const score = roundScores[player];
+        scoreTotals[player] += score;
+        scoreHistory[player].push(score);
+
+        if (score < 50) {
+          if (phaseCounters[player] < FINISH_PHASE) {
+            phaseCounters[player] += 1;
+          } else if (phaseCounters[player] === FINISH_PHASE && !finishedPlayers.includes(player)) {
+            newlyFinished.push(player);
+          }
+        }
+      });
+
+      finishedPlayers = newlyFinished;
+
+      checkWinnerAndLockIfNeeded();
       renderTable();
       playSound('submitSound');
     });
 
-    function updateColors() {
-      const scores = players.map(player => scoreTotals[player]);
-      const maxScore = Math.max(...scores);
-      const minScore = Math.min(...scores);
-      document.querySelectorAll('.total').forEach(td => {
-        const value = parseInt(td.textContent);
-        td.classList.remove('highest', 'lowest');
-        if (value === maxScore) {
-          td.classList.add('highest');
-        } else if (value === minScore) {
-          td.classList.add('lowest');
-        }
-      });
-    }
+    refreshHistory();
   </script>
 </body>
 </html>

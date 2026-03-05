@@ -12,5 +12,39 @@
       }
     }
   },
-  "playTokens": {}
+  "playTokens": {},
+  "phaseHistory": [
+    {
+      "id": "47bc462e-99f6-4b2d-9c7a-31ef7a224566",
+      "playedAt": "2026-03-05T20:08:19.591Z",
+      "createdAt": 1772741299607,
+      "players": [
+        "ada",
+        "daadf",
+        "faefaefxz",
+        "feaf"
+      ],
+      "rounds": 10,
+      "totals": {
+        "ada": 1186,
+        "daadf": 164,
+        "faefaefxz": 1214,
+        "feaf": 611
+      },
+      "phases": {
+        "ada": 7,
+        "daadf": 10,
+        "faefaefxz": 8,
+        "feaf": 9
+      },
+      "winners": [
+        "daadf"
+      ],
+      "finishedPlayers": [
+        "daadf"
+      ],
+      "rule": "single-finisher",
+      "detail": "daadf finished Phase 10 first, so they win immediately."
+    }
+  ]
 }
